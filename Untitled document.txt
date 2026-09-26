@@ -1,0 +1,818 @@
+﻿let tractorStatus = "stopped";
+let fuelLevel = 65;
+
+
+let workingSeconds = 0;
+let restSeconds = 0;
+
+
+let fuelHistory = [];
+
+
+let tractorLatitude = "";
+let tractorLongitude = "";
+
+
+let rainAlert = false;
+
+
+
+
+// PAGE LOAD
+window.onload = function () {
+
+
+    updateStatusDisplay();
+    updateFuelDisplay();
+    updateTimeDisplay();
+    showHistory();
+};
+
+
+
+
+// TRACTOR STATUS
+function changeStatus() {
+
+
+    if (tractorStatus === "working") {
+        tractorStatus = "stopped";
+    } else {
+        tractorStatus = "working";
+    }
+
+
+    updateStatusDisplay();
+}
+
+
+
+
+function updateStatusDisplay() {
+
+
+    const text =
+        document.getElementById("tractorStatus");
+
+
+    const dot =
+        document.getElementById("statusDot");
+
+
+    if (!text || !dot) return;
+
+
+    if (tractorStatus === "working") {
+
+
+        text.innerText = "WORKING";
+        dot.style.background = "green";
+
+
+    } else {
+
+
+        text.innerText = "STOPPED";
+        dot.style.background = "red";
+
+
+    }
+}
+
+
+
+
+// TIME
+function formatTime(seconds) {
+
+
+    const h = Math.floor(seconds / 3600);
+
+
+    const m =
+        Math.floor((seconds % 3600) / 60);
+
+
+    const s = seconds % 60;
+
+
+    return h + "h " +
+           m + "m " +
+           s + "s";
+}
+
+
+
+
+function updateTimeDisplay() {
+
+
+    const work =
+        document.getElementById("workingTime");
+
+
+    const rest =
+        document.getElementById("restTime");
+
+
+    if (work)
+        work.innerText =
+        formatTime(workingSeconds);
+
+
+    if (rest)
+        rest.innerText =
+        formatTime(restSeconds);
+}
+
+
+
+
+setInterval(function () {
+
+
+    if (tractorStatus === "working") {
+
+
+        workingSeconds++;
+
+
+    } else {
+
+
+        restSeconds++;
+
+
+    }
+
+
+    updateTimeDisplay();
+
+
+}, 1000);
+function updateFuel() {
+
+
+    const input =
+        Number(
+            document.getElementById("fuelInput").value
+        );
+
+
+    if (input < 0 || input > 100) {
+
+
+        alert(
+            "Enter fuel between 0 and 100."
+        );
+
+
+        return;
+    }
+
+
+    fuelLevel = input;
+
+
+    updateFuelDisplay();
+
+
+    document.getElementById(
+        "fuelInput"
+    ).value = "";
+}
+
+
+
+
+function updateFuelDisplay() {
+
+
+    const level =
+        document.getElementById("fuelLevel");
+
+
+    const bar =
+        document.getElementById("fuelBar");
+
+
+    if (level) {
+
+
+        level.innerText =
+            fuelLevel;
+    }
+
+
+    if (bar) {
+
+
+        bar.style.width =
+            fuelLevel + "%";
+    }
+
+
+    checkFuelAlert();
+}
+
+
+
+
+function checkFuelAlert() {
+
+
+    const box =
+        document.getElementById("alertBox");
+
+
+    const message =
+        document.getElementById("alertMessage");
+
+
+    if (!box || !message) return;
+
+
+
+
+    if (fuelLevel <= 20) {
+
+
+        message.innerText =
+            "⚠️ Fuel level is LOW. Please refill the tractor.";
+
+
+        box.style.borderLeftColor =
+            "red";
+
+
+    } else {
+
+
+        message.innerText =
+            "✅ Fuel level is normal.";
+
+
+        box.style.borderLeftColor =
+            "green";
+    }
+}
+function speak(message) {
+
+
+    if (!("speechSynthesis" in window)) {
+
+
+        alert("Voice is not supported.");
+
+
+        return;
+    }
+
+
+    speechSynthesis.cancel();
+
+
+    const voice =
+        new SpeechSynthesisUtterance(message);
+
+
+    voice.lang = "te-IN";
+    voice.rate = 0.9;
+    voice.pitch = 1;
+
+
+    speechSynthesis.speak(voice);
+}
+
+
+
+
+function speakStatus() {
+
+
+    if (tractorStatus === "working") {
+
+
+        speak(
+            "ట్రాక్టర్ ప్రస్తుతం వర్కింగ్ లో ఉంది."
+        );
+
+
+    } else {
+
+
+        speak(
+            "ట్రాక్టర్ ప్రస్తుతం వర్కింగ్ లో లేదు."
+        );
+    }
+}
+
+
+
+
+function speakFuel() {
+
+
+    speak(
+        "ట్రాక్టర్ లో ప్రస్తుతం " +
+        fuelLevel +
+        " శాతం ఫ్యూయల్ ఉంది."
+    );
+}
+
+
+
+
+function speakAlert() {
+
+
+    if (fuelLevel <= 20) {
+
+
+        speak(
+            "జాగ్రత్త. ట్రాక్టర్ లో ఫ్యూయల్ తక్కువగా ఉంది."
+        );
+
+
+    } else {
+
+
+        speak(
+            "ట్రాక్టర్ లో ఫ్యూయల్ సాధారణ స్థాయిలో ఉంది."
+        );
+    }
+}
+function saveFuel() {
+
+
+    const quantity =
+        Number(document.getElementById("quantity").value);
+
+
+    const rate =
+        Number(document.getElementById("rate").value);
+
+
+
+
+    if (
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(rate) ||
+        quantity <= 0 ||
+        rate <= 0
+    ) {
+
+
+        document.getElementById("message").innerText =
+            "❌ Enter valid quantity and rate.";
+
+
+        return;
+    }
+
+
+
+
+    const total = quantity * rate;
+
+
+
+
+    fuelHistory.push({
+
+
+        date: new Date().toLocaleDateString(),
+
+
+        quantity: quantity,
+
+
+        rate: rate,
+
+
+        total: total
+    });
+
+
+
+
+    document.getElementById("totalCost").innerText =
+        "Total Cost: ₹" + total;
+
+
+
+
+    document.getElementById("message").innerText =
+        "✅ Fuel refill saved!";
+
+
+
+
+    document.getElementById("quantity").value = "";
+
+
+    document.getElementById("rate").value = "";
+
+
+
+
+    showHistory();
+}
+
+
+
+
+function showHistory() {
+
+
+    const box =
+        document.getElementById("history");
+
+
+    if (!box) return;
+
+
+
+
+    if (fuelHistory.length === 0) {
+
+
+        box.innerHTML =
+            "<p>No refill records</p>";
+
+
+        return;
+    }
+
+
+
+
+    box.innerHTML = "";
+
+
+
+
+    fuelHistory.forEach(function(item, index) {
+
+
+        box.innerHTML +=
+
+
+            "<div class='history-item'>" +
+
+
+            "<p><b>Refill " +
+            (index + 1) +
+            "</b></p>" +
+
+
+            "<p>📅 Date: " +
+            item.date +
+            "</p>" +
+
+
+            "<p>⛽ Quantity: " +
+            item.quantity +
+            " Litres</p>" +
+
+
+            "<p>💰 Rate: ₹" +
+            item.rate +
+            "/L</p>" +
+
+
+            "<p>💵 Total: ₹" +
+            item.total +
+            "</p>" +
+
+
+            "</div>";
+    });
+}
+function saveFuel() {
+
+
+    const quantity =
+        Number(document.getElementById("quantity").value);
+
+
+    const rate =
+        Number(document.getElementById("rate").value);
+
+
+
+
+    if (
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(rate) ||
+        quantity <= 0 ||
+        rate <= 0
+    ) {
+
+
+        document.getElementById("message").innerText =
+            "❌ Enter valid quantity and rate.";
+
+
+        return;
+    }
+
+
+
+
+    const total = quantity * rate;
+
+
+
+
+    fuelHistory.push({
+
+
+        date: new Date().toLocaleDateString(),
+
+
+        quantity: quantity,
+
+
+        rate: rate,
+
+
+        total: total
+    });
+
+
+
+
+    document.getElementById("totalCost").innerText =
+        "Total Cost: ₹" + total;
+
+
+
+
+    document.getElementById("message").innerText =
+        "✅ Fuel refill saved!";
+
+
+
+
+    document.getElementById("quantity").value = "";
+
+
+    document.getElementById("rate").value = "";
+
+
+
+
+    showHistory();
+}
+
+
+
+
+function showHistory() {
+
+
+    const box =
+        document.getElementById("history");
+
+
+    if (!box) return;
+
+
+
+
+    if (fuelHistory.length === 0) {
+
+
+        box.innerHTML =
+            "<p>No refill records</p>";
+
+
+        return;
+    }
+
+
+
+
+    box.innerHTML = "";
+
+
+
+
+    fuelHistory.forEach(function(item, index) {
+
+
+        box.innerHTML +=
+
+
+            "<div class='history-item'>" +
+
+
+            "<p><b>Refill " +
+            (index + 1) +
+            "</b></p>" +
+
+
+            "<p>📅 Date: " +
+            item.date +
+            "</p>" +
+
+
+            "<p>⛽ Quantity: " +
+            item.quantity +
+            " Litres</p>" +
+
+
+            "<p>💰 Rate: ₹" +
+            item.rate +
+            "/L</p>" +
+
+
+            "<p>💵 Total: ₹" +
+            item.total +
+            "</p>" +
+
+
+            "</div>";
+    });
+}
+function checkRain() {
+
+
+    const status =
+        document.getElementById("rainStatus");
+
+
+    const chance =
+        document.getElementById("rainChance");
+
+
+
+
+    if (!status) return;
+
+
+
+
+    if (!tractorLatitude || !tractorLongitude) {
+
+
+        status.innerText =
+            "📍 First get tractor location.";
+
+
+        if (chance)
+            chance.innerText =
+                "💧 Rain status: --";
+
+
+        return;
+    }
+
+
+
+
+    status.innerText =
+        "⏳ Checking rain...";
+
+
+
+
+    const url =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" +
+        encodeURIComponent(tractorLatitude) +
+        "&longitude=" +
+        encodeURIComponent(tractorLongitude) +
+        "&hourly=precipitation_probability" +
+        "&forecast_days=1" +
+        "&timezone=auto";
+
+
+
+
+    fetch(url)
+
+
+        .then(function(response) {
+
+
+            if (!response.ok)
+                throw new Error("Weather API error");
+
+
+            return response.json();
+        })
+
+
+
+
+        .then(function(data) {
+
+
+            const probabilities =
+                data.hourly.precipitation_probability;
+
+
+
+
+            rainAlert = false;
+
+
+
+
+            for (
+                let i = 0;
+                i < probabilities.length;
+                i++
+            ) {
+
+
+                if (probabilities[i] >= 50) {
+
+
+                    rainAlert = true;
+
+
+                    break;
+                }
+            }
+
+
+
+
+            if (rainAlert) {
+
+
+                status.innerText =
+                    "🌧️ వర్షం పడే అవకాశం ఉంది.";
+
+
+                status.style.color =
+                    "red";
+
+
+
+
+                if (chance)
+                    chance.innerText =
+                        "💧 Rain is expected.";
+
+
+            } else {
+
+
+                status.innerText =
+                    "☀️ వర్షం పడే అవకాశం లేదు.";
+
+
+                status.style.color =
+                    "green";
+
+
+
+
+                if (chance)
+                    chance.innerText =
+                        "💧 No significant rain expected.";
+            }
+        })
+
+
+
+
+        .catch(function() {
+
+
+            status.innerText =
+                "❌ Weather data unavailable.";
+
+
+            status.style.color =
+                "red";
+        });
+}
+
+
+
+
+function speakRain() {
+
+
+    if (rainAlert) {
+
+
+        speak(
+            "జాగ్రత్త. వర్షం పడే అవకాశం ఉంది."
+        );
+
+
+    } else {
+
+
+        speak(
+            "ప్రస్తుతం వర్షం పడే అవకాశం లేదు."
+        );
+    }
+}
+console.log("🚜 Smart Tractor App Loaded");
